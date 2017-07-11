@@ -3,7 +3,7 @@ Preparation for this code:
 1. provide a file(ang) with ferrite and austenite
 2. export a file(txt) containing inly austenite OR information
 
-This profile can do following tasks:
+Crystal_V1.1 can do following tasks:
 1. calculate average austenite orientation, and export the data as filename.ang
 2. calculate the NW and KS OR according to the average austenite orientation, and export the data as nw_oim_or and ks_oim_or
 3. calculate the OR between austenite and ferrite according to the raw data, and export data as oim_or and oim_or_centered (by using 100 010 001 austenite orientation)
