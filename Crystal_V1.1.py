@@ -6,15 +6,197 @@ from crystal_math import OIMExport, Polefig
 from crystal_math import cubicsymmetry
 from crystal_math import Euler as Eu
 from crystal_math import SpecialTrans as Sp
+from crystal_math import AngleCalc as Ac
 import math
 import time
+import json
+import matplotlib.pyplot as plt
 
+def plot_variant_selection(directory, schmid_factors_dic, quaveaus):
+    slip_system_2_NW = {
+        '1'   : '3',
+        '-1'  : '2',
+        '2'   : '1',
+        '-2'  : '3',
+        '3'   : '2',
+        '-3'  : '1',
+        '4'   : '5',
+        '-4'  : '6',
+        '5'   : '6',
+        '-5'  : '4',
+        '6'   : '4',
+        '-6'  : '5',
+        '7'   : '8',
+        '-7'  : '9',
+        '8'   : '9',
+        '-8'  : '7',
+        '9'   : '7',
+        '-9'  : '8',
+        '10'  : '12',
+        '-10' : '11',
+        '11'  : '10',
+        '-11' : '12',
+        '12'  : '11',
+        '-12' : '10'
+    }
+
+    sf = [abs(float(schmid_factors_dic[str(x+1)])) for x in range(12)]
+
+    sorted_sf = sorted(sf)[::-1]
+    
+    selected_variant = {}
+
+    for y in range(12):
+        for x in range(12):
+            if sorted_sf[y] == abs(float(schmid_factors_dic[str(x+1)])):
+                if float(schmid_factors_dic[str(x+1)]) >= 0:
+                    if str(y+1) == '1':
+                        selected_variant['Max N_W_variant'] = slip_system_2_NW[str(x+1)]
+                    elif str(y+1) == '2':
+                        selected_variant['2nd N_W_variant'] = slip_system_2_NW[str(x+1)]
+                    elif str(y+1) == '3':
+                        selected_variant['3rd N_W_variant'] = slip_system_2_NW[str(x+1)]
+                    else:
+                        selected_variant[str(y+1) + 'th ' + 'N_W_variant'] = slip_system_2_NW[str(x+1)]
+                
+                elif float(schmid_factors_dic[str(x+1)]) < 0:
+                    if str(y+1) == '1':
+                        selected_variant['Max N_W_variant'] = slip_system_2_NW[str(-(x+1))]
+                    elif str(y+1) == '2':
+                        selected_variant['2nd N_W_variant'] = slip_system_2_NW[str(-(x+1))]
+                    elif str(y+1) == '3':
+                        selected_variant['3rd N_W_variant'] = slip_system_2_NW[str(-(x+1))]
+                    else:
+                        selected_variant[str(y+1) + 'th ' + 'N_W_variant'] = slip_system_2_NW[str(-(x+1))]
+    
+    print('Deformation induced variant selection:')
+    
+    for k, v in selected_variant.items():
+        print(k,'=',v)
+    
+    selected_variant = list(selected_variant.values())
+    selected_variant = [int(selected_variant[x]) for x in range(12)]
+    
+    OIMExport.nw_variant_selecion_or_plot(quaveaus, directory, selected_variant)
+
+
+def plot_schmid_factors(direc, filename, schmid_factors_dic):
+    sf = [schmid_factors_dic[str(x+1)] for x in range(12)]
+    n_groups = 12
+    index = np.arange(n_groups)
+    bar_width = 0.6
+    opacity = 0.4
+    
+
+    plt.title('Schmid Factors on different slip systems')
+    plt.xlabel('slip system')
+    plt.ylabel('Schmid Factor')
+    plt.xticks(index, ('1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'))
+    plt.bar(left=index, height=tuple(sf), width=bar_width, align="center", color="r", label=str(filename), alpha=opacity)
+    plt.axhline(color='k', linewidth=0.5)
+    plt.legend()
+    
+    plt.savefig(direc + filename[:-4] + '_schmid_factor.png')
+    
+
+def know_schmid_factors(direc, filename, quaveaus):
+ 
+    slip_systems_planes = {1 : [1.0, 1.0, 1.0],\
+		                   2 : [1.0, 1.0, 1.0],\
+		                   3 : [1.0, 1.0, 1.0],\
+		                   4 : [1.0, 1.0, 1.0],\
+		                   5 : [1.0, 1.0, 1.0],\
+		                   6 : [1.0, 1.0, 1.0],\
+		                   7 : [-1.0, 1.0, 1.0],\
+		                   8 : [-1.0, 1.0, 1.0],\
+		                   9 : [-1.0, 1.0, 1.0],\
+		                   10 : [-1.0, 1.0, 1.0],\
+		                   11 : [-1.0, 1.0, 1.0],\
+		                   12 : [-1.0, 1.0, 1.0],\
+		                   13 : [1.0, -1.0, 1.0],\
+		                   14 : [1.0, -1.0, 1.0],\
+		                   15 : [1.0, -1.0, 1.0],\
+		                   16 : [1.0, -1.0, 1.0],\
+		                   17 : [1.0, -1.0, 1.0],\
+		                   18 : [1.0, -1.0, 1.0],\
+		                   19 : [-1.0, -1.0, 1.0],\
+		                   20 : [-1.0, -1.0, 1.0],\
+		                   21 : [-1.0, -1.0, 1.0],\
+		                   22 : [-1.0, -1.0, 1.0],\
+		                   23 : [-1.0, -1.0, 1.0],\
+		                   24 : [-1.0, -1.0, 1.0]}
+
+    slip_systems_directions = {1 : [0.0, -1.0, 1.0],\
+		                   2 : [0.0, 1.0, -1.0],\
+		                   3 : [1.0, 0.0, -1.0],\
+		                   4 : [-1.0, 0.0, 1.0],\
+		                   5 : [-1.0, 1.0, 0.0],\
+		                   6 : [1.0, -1.0, 0.0],\
+		                   7 : [0.0, 1.0, -1.0],\
+		                   8 : [0.0, -1.0, 1.0],\
+		                   9 : [1.0, 0.0, 1.0],\
+		                   10 : [-1.0, 0.0, -1.0],\
+		                   11 : [-1.0, -1.0, 0.0],\
+		                   12 : [1.0, 1.0, 0.0],\
+		                   13 : [0.0, -1.0, -1.0],\
+		                   14 : [0.0, 1.0, 1.0],\
+		                   15 : [-1.0, 0.0, 1.0],\
+		                   16 : [1.0, 0.0, -1.0],\
+		                   17 : [1.0, 1.0, 0.0],\
+		                   18 : [-1.0, -1.0, 0.0],\
+		                   19 : [0.0, 1.0, 1.0],\
+		                   20 : [0.0, -1.0, -1.0],\
+		                   21 : [-1.0, 0.0, -1.0],\
+		                   22 : [1.0, 0.0, 1.0],\
+		                   23 : [1.0, -1.0, 0.0],\
+		                   24 : [-1.0, 1.0, 0.0]}
+
+    def_vector_on_OIM = [1.0, 0.0, 0.0]
+    quaveausi = Qu.qu_inv(quaveaus)
+    def_vector_center = Qu.qu_vec_rotation(quaveausi, def_vector_on_OIM)
+    print(def_vector_center)
+    
+   
+    d = def_vector_center
+    ssp = slip_systems_planes
+    ssd = slip_systems_directions
+
+    schmid_factors_list = []
+    schmid_factors_dic = {}
+
+    for x in range(24):
+        schmid_factors = {}
+        cos_theta1 = Ac.cosVector(d, ssp[x+1])
+        cos_theta2 = Ac.cosVector(d, ssd[x+1])
+
+        schmid_factor = cos_theta1 * cos_theta2
+        schmid_factors['{0}'.format(str(x+1))] = str(schmid_factor)
+        schmid_factors_list.append(schmid_factors)
+    
+    for schmid_factor in schmid_factors_list:
+        print(schmid_factor)
+
+    with open(direc + filename[:-4] + '_schmid_factor.txt', 'w', encoding='utf-8') as filew:
+        json.dump(schmid_factors_list, filew, indent=2, sort_keys=True, ensure_ascii=False)
+    
+    for x in range(12):
+        cos_theta1 = Ac.cosVector(d, ssp[2*x+1])
+        cos_theta2 = Ac.cosVector(d, ssd[2*x+1])
+
+        schmid_factor = cos_theta1 * cos_theta2
+        schmid_factors_dic['{0}'.format(str(x+1))] = str(schmid_factor)
+    
+    print('Schmid Factors on different slip systems:')
+    print(schmid_factors_dic)
+
+    return schmid_factors_list, schmid_factors_dic
 
 def output_variant_distribution(direc, filename, variants_counts):
     filevar = open (direc + filename[:-4] + '_var_distribution.txt', 'w')
     
     variant_sum = np.sum(variants_counts)
     variants_counts = Sp.variant24_convert(variants_counts)
+    
 
     for index, var_num in enumerate(variants_counts):
         strprint = '{0:2d}\t {1:6.4f} \n'\
@@ -221,8 +403,7 @@ def draw_dev110_111_map(direc, filename, phase, quave):
     
     quavefer = quavefer / np.linalg.norm(quavefer)
 
-    print('quavefer:', quavefer)
-    print('ferrite_grains:', ferrite_grains)
+    print('Ferrite average orientation:', quavefer)
     print ('Input Ferrite grains:', ferrite_grains)
     print ('Analyzed Ferrite grains:', ferrite_grains_analyzed)
     
@@ -277,7 +458,7 @@ def create_qu_phase(direc, filename, filename_aus, phase):
     path_exist = path.isfile(direc + filename[:-4] + '_qu.txt')
     
     if not path_exist: # 如果檔案不存在，就代表還沒轉換，建立一個含有qu以及phase資訊的ang檔案
-        print('create a new folder: {0}'.format(filename))
+        print('Create a folder containing {0}'.format(filename))
         makedirs(direc)
         file_oimr = open(filename, 'r')
         file_oimw = open(direc + filename[:-4] + '_qu.txt', 'w')
@@ -446,7 +627,7 @@ def main(filename, filename_aus):
     
     cur_path = getcwd()
     direc = cur_path + "\\" + filename[:-4] + '\\'
-    print('Path:', cur_path)
+    print('File path:', cur_path)
     print ('Start time:', time.strftime("%Y/%m/%d %H:%M:%S", time.localtime()) )
     starttime = time.time()
     print('File name:', filename)
@@ -501,7 +682,14 @@ def main(filename, filename_aus):
     # 以平均austenite方位為準來模擬KS的方位關係
     OIMExport.ks_oim_or_plot(quave, direc)
     
-    print(quave)
+    # 算出austenite晶體下的schmid factors，並回傳list以及dic
+    schmid_factors_list, schmid_factors_dic = know_schmid_factors(direc, filename, quave)
+    
+    # 畫出schmid factor的分布圖
+    plot_schmid_factors(direc, filename, schmid_factors_dic)
+    
+    # 畫出因為deformation造成的variant selection的pole figure
+    plot_variant_selection(direc, schmid_factors_dic, quave)
 
     endtime = time.time()
     print ('it costs ',  endtime - starttime  , ' s ')

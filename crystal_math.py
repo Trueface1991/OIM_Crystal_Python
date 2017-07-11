@@ -857,7 +857,7 @@ class OIMExport:
             oimline_str[2] = '{0:7.5f}'.format(euler[2])
             line = ('  ').join(oimline_str) +'\n'
             filew.write(line)
-
+ 
 
             euler2= Qu.qu2euler(Qu.qu_mult(qu_or, quaveaus24))
             oimline_str2[0] = '   {0:7.5f}'.format(euler2[0])
@@ -867,6 +867,113 @@ class OIMExport:
             filew2.write(line2)
 
         return filew
+
+    @staticmethod
+    def nw_oim_or_plot(quaveaus, directory):
+    
+        direc = directory
+        direc.split('\\')
+
+        copyfile('head.ang', directory + direc[-1] + 'nw_oim_or.ang')
+        filew = open(directory + direc[-1] + 'nw_oim_or.ang', 'a')
+        filew.write('\n')
+
+        for x in range(12):
+            oimline = '2.57290   0.31547   3.04730  ' +\
+                                    str(x) + '.00000 0.00000 100 1 0 1 1.355'
+
+            oimline_str = oimline.split()
+
+            qu = Qu.qu_mult(nwdict[x+1], quaveaus)
+
+            euler = Qu.qu2euler(qu)
+            oimline_str[0] = '   {0:7.5f}'.format(euler[0])
+            oimline_str[1] = '{0:7.5f}'.format(euler[1])
+            oimline_str[2] = '{0:7.5f}'.format(euler[2])
+            line = ('  ').join(oimline_str) +'\n'
+            filew.write(line)
+
+        filew.close
+
+    @staticmethod
+    def ks_oim_or_plot(quaveaus, directory):
+    
+        direc = directory
+        direc.split('\\')
+
+        copyfile('head.ang', directory + direc[-1] + 'ks_oim_or.ang')
+        filew = open(directory + direc[-1] + 'ks_oim_or.ang', 'a')
+        filew.write('\n')
+
+        for x in range(24):
+            oimline = '2.57290   0.31547   3.04730  ' +\
+                                    str(x) + '.00000 0.00000 100 1 0 1 1.355'
+
+            oimline_str = oimline.split()
+
+            qu = Qu.qu_mult(ksdict[x+1], quaveaus)
+
+            euler = Qu.qu2euler(qu)
+            oimline_str[0] = '   {0:7.5f}'.format(euler[0])
+            oimline_str[1] = '{0:7.5f}'.format(euler[1])
+            oimline_str[2] = '{0:7.5f}'.format(euler[2])
+            line = ('  ').join(oimline_str) +'\n'
+            filew.write(line)
+
+        filew.close
+    
+    @staticmethod
+    def aus_oim_or_plot(quaveaus, directory):
+        direc = directory
+        direc.split('\\')
+
+        copyfile('head.ang', directory + direc[-1] + 'aus_oim_or.ang')
+        with open(directory + direc[-1] + 'aus_oim_or.ang', 'a') as filew:
+            filew.write('\n')
+
+            oimline = '2.57290   0.31547   3.04730  ' +\
+                                    str(1) + '.00000 0.00000 100 1 0 1 1.355'
+
+            oimline_str = oimline.split()
+
+            euler = Qu.qu2euler(quaveaus)
+            oimline_str[0] = '   {0:7.5f}'.format(euler[0])
+            oimline_str[1] = '{0:7.5f}'.format(euler[1])
+            oimline_str[2] = '{0:7.5f}'.format(euler[2])
+            line = ('  ').join(oimline_str) +'\n'
+            filew.write(line)
+    
+    
+    @staticmethod
+    def nw_variant_selecion_or_plot(quaveaus, directory, selected_variant):
+    
+        direc = directory
+        direc.split('\\')
+
+        copyfile('head.ang', directory + direc[-1] + 'nw_variant_selecion_or_plot.ang')
+        filew = open(directory + direc[-1] + 'nw_variant_selecion_or_plot.ang', 'a')
+        filew.write('\n')
+
+        
+        selected_variant = sorted(selected_variant)
+
+        for x in selected_variant:
+            oimline = '2.57290   0.31547   3.04730  ' +\
+                                    str(x) + '.00000 0.00000 100 1 0 1 1.355'
+
+            oimline_str = oimline.split()
+
+            qu = Qu.qu_mult(nwdict[x], quaveaus)
+
+            euler = Qu.qu2euler(qu)
+            oimline_str[0] = '   {0:7.5f}'.format(euler[0])
+            oimline_str[1] = '{0:7.5f}'.format(euler[1])
+            oimline_str[2] = '{0:7.5f}'.format(euler[2])
+            line = ('  ').join(oimline_str) +'\n'
+            filew.write(line)
+
+        filew.close
+
 
 class Polefig:
     @staticmethod
@@ -938,26 +1045,44 @@ class SpecialTrans:
         最多的轉成V1，有24組
         '''
         varmax = np.argmax(variants_counts)
-        print ('Number of max variant:', varmax)
+        print ('Number of max variant:', varmax+1)
         variant_temp = [0]*24
-        print('Statics of 24 variants:')
         print (variants_counts)
+    
 
         if varmax > 0:
             print(list(variant_convert_table[0,:]))
             column = list(variant_convert_table[0,:]).index(varmax+1)
-            print ('Max column:', column)
+            print ('Number of column in convert table:', column)
             print('Transform max variant to variant_1:')
             for i in range(24):
                 variant_temp[i] = variants_counts\
                             [variant_convert_table[i,column] - 1]
-                print (variant_temp)
 
             variants_counts = variant_temp
-
-        print('Transformation finish')
+        
+        print(variants_counts)
+        print('Transformation finished!')
 
         return variants_counts
+
+class AngleCalc:
+    @staticmethod
+    def cosVector(x,y):
+        if(len(x)!=len(y)):
+            print('error input,x and y is not in the same space')
+            return
+        result1=0.0
+        result2=0.0
+        result3=0.0
+        for i in range(len(x)):
+            result1+=x[i]*y[i]   #sum(X*Y)
+            result2+=x[i]**2     #sum(X*X)
+            result3+=y[i]**2     #sum(Y*Y)
+        #print(result1)
+        #print(result2)
+        #print(result3)
+        return float(result1/((result2*result3)**0.5))
 
 
 if __name__ == '__main__':
